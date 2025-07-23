@@ -1,0 +1,169 @@
+document.addEventListener('DOMContentLoaded', () => {
+    let art;
+
+    const IMAGE_CONFIG = {
+        posterBasePath: "./pic/",
+        pageBackground: "web.webp"
+    };
+
+    const movies = [
+        {
+            id: 1,
+            title: "新·驯龙高手",
+            year: 2025,
+            duration: "2h 6min",
+            genres: ["剧情", "喜剧", "动作", "奇幻", "冒险"],
+            rating: 8.4,
+            votes: "120983",
+            description: "影片讲述小嗝嗝（梅森·泰晤士 Mason Thames 饰）偶然间遭遇传说中的夜煞没牙仔，并由此与之建立深厚友谊，进而打破两大族群间的隔阂，携手寻求和平的故事。",
+            cast: [
+                { name: "梅森·泰晤士" },
+                { name: "妮可·帕克" },
+                { name: "杰拉德·巴特勒" },
+                { name: "尼克·弗罗斯特" },
+                { name: "加布里埃尔·豪尔" }
+            ],
+            posterImage: "post.webp",
+            trailerUrl: "https://pan.gfwl.top/f/nB7ZUn/Dragon.mkv",
+            subtitleUrl: "srt/set.vtt"
+        }
+    ];
+
+    const pageBackground = document.getElementById('page-background');
+    const movieBackgroundImage = document.getElementById('movie-background-image');
+    const movieTitle = document.getElementById('movie-title');
+    const movieYear = document.getElementById('movie-year');
+    const movieDuration = document.getElementById('movie-duration');
+    const movieGenres = document.getElementById('movie-genres');
+    const movieStars = document.getElementById('movie-stars');
+    const movieRating = document.getElementById('movie-rating');
+    const movieVotes = document.getElementById('movie-votes');
+    const movieDescription = document.getElementById('movie-description');
+    const movieCast = document.getElementById('movie-cast');
+    const watchTrailerBtn = document.getElementById('watch-trailer-btn');
+    const mainFooter = document.querySelector('main.content-wrapper > footer');
+
+    const playerOverlay = document.getElementById('player-container-overlay');
+    const closePlayerBtn = document.getElementById('close-player-btn');
+    const playPageContent = document.querySelector('.play-page-content');
+    const playMovieTitle = document.getElementById('play-movie-title');
+    const playMovieDescription = document.getElementById('play-movie-description');
+
+    function populateMovieData(movie) {
+        const fullPosterUrl = `${IMAGE_CONFIG.posterBasePath}${movie.posterImage}`;
+
+        movieBackgroundImage.style.backgroundImage = `url(${fullPosterUrl})`;
+        movieTitle.textContent = movie.title;
+        movieYear.textContent = movie.year;
+        movieDuration.textContent = movie.duration;
+        movieRating.textContent = `${movie.rating}/10`;
+        movieVotes.textContent = movie.votes;
+        movieDescription.textContent = movie.description;
+
+        movieGenres.innerHTML = '';
+        movie.genres.forEach(genre => {
+            const genreTag = document.createElement('span');
+            genreTag.className = 'genre-tag';
+            genreTag.textContent = genre;
+            movieGenres.appendChild(genreTag);
+        });
+
+        movieCast.innerHTML = '';
+        movie.cast.forEach(actor => {
+            const castNameTag = document.createElement('span');
+            castNameTag.className = 'cast-name-tag';
+            castNameTag.textContent = actor.name;
+            movieCast.appendChild(castNameTag);
+        });
+
+        movieStars.innerHTML = '';
+        const totalStars = 5;
+        const filledStars = Math.round(movie.rating / 2);
+        for (let i = 0; i < totalStars; i++) {
+            const starSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            starSvg.setAttribute("class", i < filledStars ? "star star-filled" : "star star-empty");
+            starSvg.setAttribute("viewBox", "0 0 24 24");
+            starSvg.innerHTML = `<path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7-6.3-4.6-6.3 4.6 2.3-7-6-4.6h7.6z"/>`;
+            movieStars.appendChild(starSvg);
+        }
+
+        watchTrailerBtn.onclick = () => {
+            if (art) {
+                art.destroy();
+            }
+
+            playMovieTitle.textContent = movie.title;
+            playMovieDescription.textContent = movie.description;
+
+            const footerClone = mainFooter.cloneNode(true);
+            playPageContent.appendChild(footerClone);
+
+            art = new Artplayer({
+                container: '#artplayer-container',
+                url: movie.trailerUrl,
+                poster: `${IMAGE_CONFIG.posterBasePath}${IMAGE_CONFIG.pageBackground}`,
+                title: movie.title,
+                theme: '#61a0ffff',
+                playbackRate: true,
+                hotkey: true,
+                fullscreen: true,
+                pip: true,
+                autoplay: false,
+                autoSize: false,
+                aspectRatio: true,
+                fullscreenWeb: true,
+                autoOrientation: true,
+                setting: true,
+                subtitle: {
+                    type: 'vtt',
+                    style: {
+                        color: '#ffffff',
+                        fontSize: '23px',
+                    },
+                },
+                settings: [
+                    {
+                        html: '字幕',
+                        width: 250,
+                        tooltip: '请选择',
+                        selector: [
+                            {
+                                default: true,
+                                html: '<span style="color:gray">中英双语</span>',
+                                url: movie.subtitleUrl,
+                            },
+                        ],
+                        onSelect: function (item, $dom, event) {
+                            art.subtitle.url = item.url;
+                            return item.html;
+                        }
+                    }
+                ]
+            });
+
+            playerOverlay.classList.add('show');
+        };
+    }
+
+    function closePlayer() {
+        playerOverlay.classList.remove('show');
+        if (art) {
+            art.destroy();
+            art = null;
+        }
+        const clonedFooter = playPageContent.querySelector('footer');
+        if (clonedFooter) {
+            playPageContent.removeChild(clonedFooter);
+        }
+    }
+
+    closePlayerBtn.onclick = closePlayer;
+
+    if (movies.length > 0) {
+        const firstMovie = movies[0];
+        pageBackground.style.backgroundImage = `url(${IMAGE_CONFIG.posterBasePath}${IMAGE_CONFIG.pageBackground})`;
+        populateMovieData(firstMovie);
+    }
+});
+
+/* @RFKONG 2025 周周公益 */
